@@ -1,5 +1,6 @@
 import 'package:cipherplant/pages/myPlants.dart';
 import 'package:cipherplant/pages/plantHealth.dart';
+import 'package:cipherplant/pages/scanPage.dart';
 import 'package:cipherplant/pages/settings.dart';
 import 'package:flutter/material.dart';
 
@@ -107,7 +108,8 @@ class _AltHomePageState extends State<AltHomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => Planthealth()),
+                              // builder: (context) => Planthealth()),
+                              builder: (context) => ScanPage()),
                         );
                       },
                       child: Card(
