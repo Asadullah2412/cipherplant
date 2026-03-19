@@ -136,6 +136,8 @@ Remove infected leaves and apply copper-based fungicide.
 Avoid overhead watering to reduce fungal spread.
 ```
 
+![alt text](1.jpeg "Title")
+![alt text](2.jpeg "Title")
 ---
 
 # 🧪 Model Pipeline
