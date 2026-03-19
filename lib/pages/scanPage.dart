@@ -51,43 +51,74 @@ class _ScanPageState extends State<ScanPage> {
   }
 
 // pick image
-  // Future pickImage() async {
-  //   final XFile? image = await picker.pickImage(source: ImageSource.camera);
+  Future pickImage() async {
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
 
-  //   if (image != null) {
-  //     File file = File(image.path);
+    if (image != null) {
+      File file = File(image.path);
 
-  //     setState(() {
-  //       imageFile = file;
-  //       resultText = "Processing...";
-  //     });
+      setState(() {
+        imageFile = file;
+        isLoading = true;
+        resultData = null;
+      });
 
-  //     List input = await preprocessLeafImage(file);
+      try {
+        // 🔹 Preprocess
+        List input = await preprocessLeafImage(file);
 
-  //     bool leaf = inferenceService.isLeaf(input);
+        // 🔹 Leaf check
+        bool leaf = inferenceService.isLeaf(input);
 
-  //     if (!leaf) {
-  //       // print("Not a leaf image");
-  //       setState(() {
-  //         resultText = "❌ Please scan a plant leaf 🌿";
-  //       });
-  //       return;
-  //     }
+        if (!leaf) {
+          setState(() {
+            isLoading = false;
+            resultData = {"message": "❌ Please scan a plant leaf 🌿"};
+          });
+          return;
+        }
 
-  //     List<double> output = inferenceService.runInference(input);
+        // 🔹 Disease prediction
+        List<double> output = inferenceService.runInference(input);
 
-  //     int index = inferenceService.getMaxIndex(output);
+        int index = inferenceService.getMaxIndex(output);
 
-  //     List<String> labels = await inferenceService.loadLabels();
+        List<String> labels = await inferenceService.loadLabels();
 
-  //     String prediction = labels[index];
-  //     String explanation = await inferenceService.getLLMResponse(prediction);
-  //     setState(() {
-  //       resultText = explanation;
-  //     });
-  //     // print("Prediction: $prediction");
-  //   }
-  // }
+        String prediction = labels[index];
+
+        // 🔥 FIX: get confidence properly
+        double confidence = output[index];
+
+        print("Prediction: $prediction");
+        print("Confidence: $confidence");
+
+        // 🔹 Send ONLY prediction + confidence to API
+        var response =
+            await inferenceService.sendPredictionToAPI(prediction, confidence);
+
+        print("API RESPONSE: $response");
+
+        // 🔹 Update UI
+        setState(() {
+          resultData = {
+            "prediction": prediction,
+            "confidence": confidence,
+            "explanation": response,
+          };
+          isLoading = false;
+        });
+      } catch (e) {
+        print("Error: $e");
+
+        setState(() {
+          isLoading = false;
+          resultData = {"message": "Error processing image"};
+        });
+      }
+    }
+  }
+
   Widget buildResultCard() {
     final explanation = resultData!['explanation'];
 
@@ -210,40 +241,6 @@ class _ScanPageState extends State<ScanPage> {
         ),
       ),
     );
-  }
-
-  Future pickImage() async {
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
-
-    if (image != null) {
-      File file = File(image.path);
-
-      setState(() {
-        imageFile = file;
-
-        isLoading = true;
-        resultData = null;
-      });
-
-      try {
-        var response = await inferenceService.sendImageToAPI(file);
-
-        print("FULL RESPONSE: $response");
-
-        // resultText = "Prediction: ${response['prediction']}";
-        setState(() {
-          resultData = response;
-
-          isLoading = false;
-        });
-      } catch (e) {
-        print("Error: $e");
-
-        setState(() {
-          resultText = "Error connecting to API";
-        });
-      }
-    }
   }
 
   @override

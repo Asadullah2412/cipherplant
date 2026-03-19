@@ -55,25 +55,29 @@ class InferenceService {
     return List<double>.from(output[0]);
   }
 
-  Future<String> getLLMResponse(String prediction) async {
-    // temporary mock (we’ll replace with real API)
-    await Future.delayed(const Duration(seconds: 1));
+  Future<Map<String, dynamic>> sendPredictionToAPI(
+      String prediction, double confidence) async {
+    var uri = Uri.parse("http://192.168.0.3:8000/explain");
 
-    return """
-Disease: $prediction
+    var response = await http.post(
+      uri,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "prediction": prediction,
+        "confidence": confidence,
+      }),
+    );
 
-Cause:
-This disease is caused by fungal infection in humid conditions.
+    print("STATUS: ${response.statusCode}");
+    print("RAW: ${response.body}");
 
-Treatment:
-• Remove infected leaves
-• Apply fungicide
-• Avoid overwatering
-
-Prevention:
-• Ensure good airflow
-• Use healthy seeds
-""";
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("API Error: ${response.statusCode}");
+    }
   }
 
   Future<Map<String, dynamic>> sendImageToAPI(File imageFile) async {

@@ -113,6 +113,8 @@ Make sure a **physical Android device** or emulator is connected.
 
 # 📷 How It Works
 
+![alt text](img.png "Title")
+
 1. User captures a leaf image.
 2. The image is preprocessed (resize + normalization).
 3. The TensorFlow Lite model performs inference on-device.
